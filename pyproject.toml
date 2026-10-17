@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "duban-watch"
-version = "1.0.0"
+version = "1.1.0"
 description = "督办盯梢小助手确定性业务内核"
 requires-python = ">=3.10"
 dependencies = ["openpyxl>=3.1,<4", "python-docx>=1.1,<2", "matplotlib>=3.8,<4", "pypdf>=5,<7"]

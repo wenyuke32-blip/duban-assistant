@@ -1,0 +1,55 @@
+test_ai_evidence_and_noninvented_values (test_business.Business.test_ai_evidence_and_noninvented_values) ... ok
+test_authorization_blocked (test_business.Business.test_authorization_blocked) ... ok
+test_cancelled_and_primary_department_statistics (test_business.Business.test_cancelled_and_primary_department_statistics) ... ok
+test_close_reopen_original_deadline (test_business.Business.test_close_reopen_original_deadline) ... ok
+test_corrupt_ledger_never_silently_initialized (test_business.Business.test_corrupt_ledger_never_silently_initialized) ... ok
+test_dispatch_unknown_never_retry_without_reconcile (test_business.Business.test_dispatch_unknown_never_retry_without_reconcile) ... ok
+test_formula_injection_is_text (test_business.Business.test_formula_injection_is_text) ... ok
+test_history_72h (test_business.Business.test_history_72h) ... ok
+test_import_and_partial_failure (test_business.Business.test_import_and_partial_failure) ... ok
+test_mail_cannot_delete_or_change_deadline (test_business.Business.test_mail_cannot_delete_or_change_deadline) ... ok
+test_mail_sender_ambiguity_and_false_percent (test_business.Business.test_mail_sender_ambiguity_and_false_percent) ... ok
+test_mail_update_and_dedup (test_business.Business.test_mail_update_and_dedup) ... ok
+test_multitask_and_explicit_new_assignment (test_business.Business.test_multitask_and_explicit_new_assignment) ... ok
+test_old_feedback_preserves_fields (test_business.Business.test_old_feedback_preserves_fields) ... ok
+test_persistence_and_init (test_business.Business.test_persistence_and_init) ... ok
+test_replace_failure_preserves_ledger (test_business.Business.test_replace_failure_preserves_ledger) ... ok
+test_report_ten_files_real_charts_and_isolation (test_business.Business.test_report_ten_files_real_charts_and_isolation) ... ok
+test_sync_blocked_without_adapter (test_business.Business.test_sync_blocked_without_adapter) ... ok
+test_transaction_rollback_and_backup (test_business.Business.test_transaction_rollback_and_backup) ... ok
+test_warning_dedup_and_overdue_daily (test_business.Business.test_warning_dedup_and_overdue_daily) ... ok
+test_contact_change_invalidates_old_queue (test_cli.CLI.test_contact_change_invalidates_old_queue) ... ok
+test_excel_import_and_docx_pdf_extract (test_cli.CLI.test_excel_import_and_docx_pdf_extract) ... ok
+test_full_offline_and_restart (test_cli.CLI.test_full_offline_and_restart) ... ok
+test_mail_cursor_checkpoint_and_retry (test_cli.CLI.test_mail_cursor_checkpoint_and_retry) ... ok
+test_all_warning_calendar_nodes (test_regressions.Regression.test_all_warning_calendar_nodes) ... ok
+test_blank_ai_evidence_is_not_evidence (test_regressions.Regression.test_blank_ai_evidence_is_not_evidence) ... ok
+test_changed_attachment_is_not_dispatched (test_regressions.Regression.test_changed_attachment_is_not_dispatched) ... ok
+test_corrupt_primary_explicit_restore_preserves_corrupt_copy (test_regressions.Regression.test_corrupt_primary_explicit_restore_preserves_corrupt_copy) ... ok
+test_definitive_failure_can_retry_once_and_then_dedup (test_regressions.Regression.test_definitive_failure_can_retry_once_and_then_dedup) ... ok
+test_duplicate_content_with_new_mail_id_not_applied_twice (test_regressions.Regression.test_duplicate_content_with_new_mail_id_not_applied_twice) ... ok
+test_empty_key_fields_rejected_before_corruption (test_regressions.Regression.test_empty_key_fields_rejected_before_corruption) ... ok
+test_equal_time_conflicting_mail_is_pending (test_regressions.Regression.test_equal_time_conflicting_mail_is_pending) ... ok
+test_fetch_exception_is_blocking_not_success (test_regressions.Regression.test_fetch_exception_is_blocking_not_success) ... ok
+test_invalid_text_fails_one_batch_item_only (test_regressions.Regression.test_invalid_text_fails_one_batch_item_only) ... ok
+test_mail_cannot_clear_existing_problem (test_regressions.Regression.test_mail_cannot_clear_existing_problem) ... ok
+test_malformed_send_response_marks_unknown_and_continues (test_regressions.Regression.test_malformed_send_response_marks_unknown_and_continues) ... ok
+test_nonadvancing_pagination_is_blocked (test_regressions.Regression.test_nonadvancing_pagination_is_blocked) ... ok
+test_noop_mail_advances_watermark_prevents_older_override (test_regressions.Regression.test_noop_mail_advances_watermark_prevents_older_override) ... ok
+test_noop_update_preserves_history_and_queue (test_regressions.Regression.test_noop_update_preserves_history_and_queue) ... ok
+test_old_reports_blocked_after_business_update (test_regressions.Regression.test_old_reports_blocked_after_business_update) ... ok
+test_percent_80_is_not_evidenced_by_180 (test_regressions.Regression.test_percent_80_is_not_evidenced_by_180) ... ok
+test_repeated_pending_is_idempotent (test_regressions.Regression.test_repeated_pending_is_idempotent) ... ok
+test_repeated_report_and_queue_reuse_exact_files (test_regressions.Regression.test_repeated_report_and_queue_reuse_exact_files) ... ok
+test_report_publish_and_ledger_commit_rollback_together (test_regressions.Regression.test_report_publish_and_ledger_commit_rollback_together) ... ok
+test_shared_anchor_is_not_unique_evidence (test_regressions.Regression.test_shared_anchor_is_not_unique_evidence) ... ok
+test_stale_queued_reports_cannot_bypass_freshness_check (test_regressions.Regression.test_stale_queued_reports_cannot_bypass_freshness_check) ... ok
+test_unavailable_attachment_blocks_cursor_then_resumes (test_regressions.Regression.test_unavailable_attachment_blocks_cursor_then_resumes) ... ok
+test_unrecognised_sheet_is_not_silently_destroyed (test_regressions.Regression.test_unrecognised_sheet_is_not_silently_destroyed) ... ok
+test_update_invalidates_same_second_ai_result (test_regressions.Regression.test_update_invalidates_same_second_ai_result) ... ok
+test_v1_legacy_ai_is_not_reported_as_current (test_regressions.Regression.test_v1_legacy_ai_is_not_reported_as_current) ... ok
+
+----------------------------------------------------------------------
+Ran 50 tests in 19.501s
+
+OK

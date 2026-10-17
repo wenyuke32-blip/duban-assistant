@@ -1,26 +1,21 @@
-# 督办盯梢小助手 V1.0
+# 督办盯梢小助手 V1.1 审计修复版
 
-[点击下载完整项目 ZIP（含 Excel 模板）](https://github.com/wenyuke32-blip/duban-assistant/raw/refs/heads/main/downloads/督办盯梢小助手_V1.0.zip)
+[下载完整V1.1 ZIP](https://github.com/wenyuke32-blip/duban-assistant/raw/refs/heads/main/downloads/duban-assistant-v1.1.zip) · [四类端到端验收报告](docs/端到端验收报告.md) · [部署操作说明](docs/部署操作说明_V1.1.md)
 
-也可点击仓库页面的 **Code → Download ZIP** 下载全部源码。
+当前不能认定项目已完成MobileWork生产上线。已经实际运行的是本地确定性业务内核；真实模型、cmcc-mail绑定模块尚未实现，企业邮箱搜索/附件下载/发送和无人值守授权未验证。不得把提示词、fixture或函数存在当作真实能力通过。
 
-根据《督办盯梢小助手_Codex开发提示词_V1.0》制作的MobileWork Skill源码项目。包含可执行Python业务内核、固定Excel台账模板、图表报告、宿主AI/邮箱适配合同、测试与中文指南。
-
-**可本地运行：** 台账初始化/增量管理、Excel导入、归档/重开、去重与异常保护、预警入队、四部门和管理员共10份带图表Excel/Word报告。
-
-**上线阻塞：** 尚未取得cmcc-mail SKILL.md、MobileWork实际工具/执行规则、宿主AI和真实邮箱会话；真实自动收发、无人值守发送授权、宿主持久化尚未验收。邮箱和AI调用链需要企业按真实接口绑定，不能将本包视为已完成企业平台部署。详见docs/邮件与宿主适配.md与docs/验收清单.md。
-
-在本项目根目录：
+本版重点修复重复更新/报告入队、空证据和非法字段、旧AI研判失效、附件来源验证与分页恢复，以及报告发布和台账提交窗口的中断恢复。详细证据见验收报告及docs/evidence。
 
 ```bash
 python tools/check_environment.py
 python -m duban init --workspace ./workspace-data
+python -m duban doctor --workspace ./workspace-data
 python -m duban add --workspace ./workspace-data --file examples/新增任务.json
-python -m duban query --workspace ./workspace-data
 python -m duban reports --workspace ./workspace-data
 python -m unittest discover -s tests -v
+python tools/run_acceptance.py --output ./acceptance-run
 ```
 
-依赖见requirements.txt；需Python3.10+、Linux/POSIX及中文图表字体。平台未允许安装依赖时不要自行安装。首次初始化不会放入演示任务，examples中的example.invalid地址永远不是生产收件人。
+运行条件：Python3.10+、Linux/POSIX、中文字体、requirements.txt中的依赖。能力探测仅验证当前环境；不能假设MobileWork允许Python或安装依赖。acceptance-run必须为空且与生产目录分离。最后一条用合成任务真实写本地文件，并用明确标记的模拟宿主验证调用链，真实邮件和真实模型调用次数均为0。
 
-入口说明：SKILL.md；部署恢复：docs/部署与恢复.md；日常操作：docs/日常使用指南.md；自动任务：prompts/自动任务调用提示词.md；测试证据：docs/本地测试结果.txt。空模板在templates，不能覆盖已有台账。
+发布包含SKILL.md、代码、空白台账、提示词/schema、测试、两条端到端流程、测试证据及中文部署说明。生产初始化不导入样例。tests/fixture_adapter.py只能用于验收，不能用于生产。

@@ -1,0 +1,406 @@
+{
+  "time": "2026-10-17T15:08:28.034650+08:00",
+  "passed": 65,
+  "failed": 0,
+  "真实邮箱发送": 0,
+  "真实模型调用": 0,
+  "checks": [
+    {
+      "category": "1",
+      "check": "跨独立进程初始化不覆盖任务",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "重复相同更新不产生业务更新",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "归档重开保留ID和原截止",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "10份报告文件真实存在",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "市场部数量与真实台账独立核对",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "市场部四个Excel原生图表",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "市场部图表源数据正确",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "市场部Word图表及正文",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "市场部不含其他部门专属任务:测试园区扩容",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "市场部不含其他部门专属任务:测试客户走访",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "市场部不含其他部门专属任务:测试企业专线交付",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "市场部不含其他部门专属任务:测试流程材料",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "市场部不含其他部门专属任务:测试取消事项",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "政企部数量与真实台账独立核对",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "政企部四个Excel原生图表",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "政企部图表源数据正确",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "政企部Word图表及正文",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "政企部不含其他部门专属任务:测试园区扩容",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "政企部不含其他部门专属任务:测试渠道走访",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "政企部不含其他部门专属任务:测试流程材料",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "政企部不含其他部门专属任务:测试取消事项",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "网络部数量与真实台账独立核对",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "网络部四个Excel原生图表",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "网络部图表源数据正确",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "网络部Word图表及正文",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "网络部不含其他部门专属任务:测试客户走访",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "网络部不含其他部门专属任务:测试企业专线交付",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "网络部不含其他部门专属任务:测试渠道走访",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "网络部不含其他部门专属任务:测试流程材料",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "网络部不含其他部门专属任务:测试取消事项",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "综合部数量与真实台账独立核对",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "综合部四个Excel原生图表",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "综合部图表源数据正确",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "综合部Word图表及正文",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "综合部不含其他部门专属任务:测试园区扩容",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "综合部不含其他部门专属任务:测试客户走访",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "综合部不含其他部门专属任务:测试企业专线交付",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "综合部不含其他部门专属任务:测试渠道走访",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "管理员综合数量与真实台账独立核对",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "管理员综合四个Excel原生图表",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "管理员综合图表源数据正确",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "管理员综合Word图表及正文",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "五封报告正确入队",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "相同报告再次生成不重复入队",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "未配置邮箱时不会报告发送成功",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "重复报告保持同一版本及全部字节不变",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "报告发布窗口进程中断已触发",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "重启后报告及台账回到同一有效版本",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "并发新增无丢失更新",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "损坏文件不会被重新初始化",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "显式恢复备份并保留损坏副本",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "1",
+      "check": "恢复后仍可读取八项任务",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "模拟两页三封邮件全部拉取",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "模拟邮件新增更新办结及歧义隔离",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "本地Word附件真实解析后应用模拟计划",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "固定fixture研判结果有原文依据并入台账",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "五封模拟报告每封两附件且不串部门",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "市场部模拟分发隔离",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "政企部模拟分发隔离",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "网络部模拟分发隔离",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "综合部模拟分发隔离",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "管理员综合模拟分发隔离",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "模拟发送不计入真实发送数",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "模拟完整流程重跑不重复投递或重建报告",
+      "pass": true,
+      "detail": null
+    },
+    {
+      "category": "2",
+      "check": "模拟自然语言入口只验证计划执行",
+      "pass": true,
+      "detail": null
+    }
+  ],
+  "limitations": [
+    "MobileWork宿主执行权限/重启持久化未验证",
+    "cmcc-mail真实工具绑定未实现",
+    "真实邮件语义匹配和AI原因质量未验证",
+    "真实附件下载/发送及收件箱投递未验证",
+    "正式无人值守授权未核实"
+  ]
+}

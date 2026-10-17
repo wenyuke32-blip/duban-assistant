@@ -1,1 +1,69 @@
-{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["risk","facts","hypotheses","evidence","actions","coordination","category","next_focus"],"properties":{"risk":{"enum":["低","中","高","紧急"]},"facts":{"type":"array","items":{"type":"string"}},"hypotheses":{"type":"array","items":{"type":"string"}},"evidence":{"type":"array","minItems":1,"items":{"type":"string","minLength":1}},"actions":{"type":"array","items":{"type":"string"}},"coordination":{"type":"array","items":{"type":"string"}},"category":{"type":"string"},"next_focus":{"type":"array","items":{"type":"string"}}}}
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "risk",
+    "facts",
+    "hypotheses",
+    "evidence",
+    "actions",
+    "coordination",
+    "category",
+    "next_focus"
+  ],
+  "properties": {
+    "risk": {
+      "enum": [
+        "低",
+        "中",
+        "高",
+        "紧急"
+      ]
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "hypotheses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S"
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "coordination": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "category": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "next_focus": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

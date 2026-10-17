@@ -1,0 +1,30 @@
+{
+  "file": "duban-assistant-v1.1.zip",
+  "size": 475889,
+  "sha256": "3ed5a5b70a80fde4c514c328cccfe145ba679525692125d21b4fb30c515ac7f9",
+  "files": 63,
+  "zip_integrity": "pass",
+  "clean_extraction_smoke": [
+    {
+      "command": "doctor",
+      "exit_code": 0
+    },
+    {
+      "command": "init",
+      "exit_code": 0
+    },
+    {
+      "command": "add",
+      "exit_code": 0
+    },
+    {
+      "command": "reports",
+      "exit_code": 0
+    }
+  ],
+  "unit_tests": 50,
+  "local_checks": 52,
+  "simulated_checks": 13,
+  "real_mail_sent": 0,
+  "real_model_calls": 0
+}

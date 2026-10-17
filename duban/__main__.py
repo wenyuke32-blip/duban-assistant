@@ -1,5 +1,6 @@
 from __future__ import annotations
-import argparse, copy, fcntl, json, sys
+import argparse, copy, fcntl, hashlib, json, sys
+from datetime import datetime
 from pathlib import Path
 from openpyxl import load_workbook
 from .store import Store, now, uid, stamp, TZ
@@ -36,35 +37,60 @@ def batch(s,ops):
             results.append({'index':i,'ok':False,'pending_id':pid,'error':str(e)})
     return results
 
-def sync(store,adapter):
-    if not adapter: return {'status':'blocked','原因':'缺少已验证的cmcc-mail宿主适配器；未读取邮箱'}
-    with store.transaction() as s: cursor=s.get_config('mail_cursor')
-    page=adapter.fetch_mail(cursor)
-    if not isinstance(page.get('messages'),list): raise ValueError('邮件适配器返回格式无效')
-    summary={'status':'ok','读取邮件数量':len(page['messages']),'处理':[]}
-    complete=True
-    for mail in page['messages']:
+def sync(store,adapter,max_pages=100):
+    if not adapter: return {'status':'blocked','读取邮件数量':0,'原因':'缺少已验证的cmcc-mail宿主适配器；未读取邮箱'}
+    summary={'status':'ok','读取邮件数量':0,'处理':[],'页数':0,'执行模式':adapter.execution_mode if isinstance(adapter,Adapter) else getattr(adapter,'EXECUTION_MODE','unverified')}
+    for _ in range(max_pages):
+        with store.transaction() as s: cursor=s.get_config('mail_cursor')
         try:
-            with store.transaction() as s:
-                if any(r['邮件ID']==mail['id'] for r in s.data['mail']):
-                    summary['处理'].append({'邮件ID':mail['id'],'重复邮件':1}); continue
-                # 附件下载只能由合法邮箱/平台接口完成，不从任意正文URL抓取。
-                attachments=mail.get('attachments',[])
-                for a in attachments:
-                    if not a.get('local_path'):
-                        s.pending('附件不可读取',{'邮件ID':mail['id'],'附件名称':a.get('name','未命名'),'处理':'由管理员合法下载后用extract/import入口处理'})
-                context={'tasks':copy.deepcopy(core.all_tasks(s)),'contacts':copy.deepcopy(s.data['contacts'])}
-                plan=adapter.plan_feedback(copy.deepcopy(mail),context)
-                summary['处理'].append({'邮件ID':mail['id'],**core.process_mail(s,mail,plan)})
+            page=adapter.fetch_mail(cursor)
+            if not isinstance(page,dict) or not isinstance(page.get('messages'),list): raise ValueError('邮件页格式无效')
         except Exception as e:
-            complete=False
-            with store.transaction() as s: s.pending('邮件同步失败',{'邮件ID':mail.get('id','未知'),'错误类型':type(e).__name__})
-            summary['处理'].append({'邮件ID':mail.get('id','未知'),'失败':type(e).__name__})
-    if complete:
-        with store.transaction() as s: s.set_config('mail_cursor',page.get('next_cursor',cursor))
-    if not complete or page.get('has_more') is True:
-        summary['status']='incomplete'; summary['原因']='存在失败或后续页，重复调用同步直到完成；本轮暂停预警'
-    return summary
+            with store.transaction() as s: s.pending('邮件拉取失败',{'错误类型':type(e).__name__})
+            summary.update({'status':'incomplete','原因':'邮件接口失败，本轮暂停预警'}); return summary
+        summary['页数']+=1; summary['读取邮件数量']+=len(page['messages']); complete=True
+        def order(mail):
+            try: return stamp(mail['sent_at'])
+            except Exception: return datetime.min.replace(tzinfo=TZ)
+        for original in sorted(page['messages'],key=order):
+            mail=copy.deepcopy(original); mid=mail.get('id','未知') if isinstance(mail,dict) else '未知'
+            try:
+                with store.transaction() as s:
+                    if any(r['邮件ID']==mid for r in s.data['mail']):
+                        summary['处理'].append({'邮件ID':mid,'重复邮件':1}); continue
+                    if not isinstance(mail,dict): raise ValueError('邮件信封无效')
+                    sources={'body':str(mail.get('body',''))}
+                    digests={}
+                    for index,a in enumerate(mail.get('attachments',[])):
+                        if not a.get('local_path'): raise ValueError('附件未由合法宿主工具下载')
+                        path=Path(a['local_path'])
+                        if not path.is_file() or path.stat().st_size>16*1024*1024: raise ValueError('附件不存在或超过16MiB')
+                        source_id='attachment:'+str(index)
+                        content=extract(path)
+                        sources[source_id]=content if isinstance(content,str) else json.dumps(content,ensure_ascii=False)
+                        digests[source_id]=hashlib.sha256(path.read_bytes()).hexdigest()
+                    mail['evidence_sources']=sources; mail['attachment_digests']=digests
+                    context={'tasks':copy.deepcopy(core.all_tasks(s)),'contacts':copy.deepcopy(s.data['contacts'])}
+                    plan=adapter.plan_feedback(copy.deepcopy(mail),context)
+                    processed=core.process_mail(s,mail,plan)
+                    for pending in s.data['pending']:
+                        if pending['类型']=='邮件同步失败' and pending['状态']=='待确认' and pending['内容'].get('邮件ID')==mid: pending['状态']='自动恢复'
+                summary['处理'].append({'邮件ID':mid,**processed})
+            except Exception as e:
+                complete=False
+                with store.transaction() as s: s.pending('邮件同步失败',{'邮件ID':mid,'错误类型':type(e).__name__})
+                summary['处理'].append({'邮件ID':mid,'失败':type(e).__name__})
+        if not complete:
+            summary.update({'status':'incomplete','原因':'存在失败邮件或未读附件，游标未推进，本轮暂停预警'}); return summary
+        next_cursor=page.get('next_cursor',cursor)
+        if page.get('has_more') is True and next_cursor==cursor:
+            summary.update({'status':'incomplete','原因':'分页游标未推进，本轮暂停预警'}); return summary
+        with store.transaction() as s:
+            s.set_config('mail_cursor',next_cursor)
+            for pending in s.data['pending']:
+                if pending['类型']=='邮件拉取失败' and pending['状态']=='待确认': pending['状态']='自动恢复'
+        if page.get('has_more') is not True: return summary
+    summary.update({'status':'incomplete','原因':'超过最大分页数，本轮暂停预警；再次同步继续'}); return summary
 
 def extract(path):
     p=Path(path); suffix=p.suffix.lower()
@@ -84,6 +110,8 @@ def extract(path):
 def run(args):
     store=Store(args.workspace); adapter=Adapter(args.adapter) if args.adapter else None
     cmd=ALIASES.get(args.command,args.command)
+    if cmd=='recover': return {'命令':'recover','结果':store.recover()}
+    if cmd=='doctor': return {'命令':'doctor','宿主适配器':adapter.capabilities() if adapter else '未配置；真实AI和邮箱未接入','真实平台验收':'未执行'}
     with store.transaction() as s:
         baseline={k:len(s.data[k]) for k in ['active','closed','pending','outbox','mail']}
         old_ids={r['ID'] for r in s.data['history']}
@@ -165,10 +193,12 @@ def run(args):
         changes=[r for r in s.data['history'] if r['ID'] not in old_ids]
         if cmd in ['add','update','batch','nl','import','reopen','resolve','sync'] and changes:
             if adapter: core.scan(s,adapter)
-        needs=[t['内部任务唯一ID'] for t in s.data['active'] if not t.get('最新AI研判时间') or stamp(t['最近更新时间'])>stamp(t['最新AI研判时间'])]
+        needs=[t['内部任务唯一ID'] for t in s.data['active'] if not core.current_analysis(s,t)]
         summary={'本次新增任务数':sum(r['类型']=='新增' for r in changes),'本次更新任务数':sum(r['类型']=='更新' for r in changes),
                  '本次办结任务数':sum(r['类型']=='办结' for r in changes),'本次重新开启任务数':sum(r['类型']=='重新开启' for r in changes),
-                 '本次发送成功数量':sum(r['状态']=='已发送' and r['ID'] not in old_sent for r in s.data['outbox']),
+                 '本次发送成功数量':sum(r['状态']=='已发送' and r['ID'] not in old_sent and r['内容'].get('发送凭据',{}).get('execution_mode')=='production' for r in s.data['outbox']),
+                 '本次模拟发送数量':sum(r['状态']=='已发送' and r['ID'] not in old_sent and r['内容'].get('发送凭据',{}).get('execution_mode')=='simulation' for r in s.data['outbox']),
+                 '本次未经环境核实的适配器成功数':sum(r['状态']=='已发送' and r['ID'] not in old_sent and r['内容'].get('发送凭据',{}).get('execution_mode') not in ['production','simulation'] for r in s.data['outbox']),
                  '需宿主AI研判任务ID':needs,
                  '本次新增邮件处理记录':len(s.data['mail'])-baseline['mail'],'本次新增待确认数':len(s.data['pending'])-baseline['pending'],
                  '当前高风险在办任务数':core.stats(s.data['active'])['高风险任务'],
@@ -178,7 +208,7 @@ def run(args):
     return {'命令':cmd,'结果':result,'执行摘要':summary}
 
 def main():
-    p=argparse.ArgumentParser(description='督办盯梢小助手V1.0；详见SKILL.md')
+    p=argparse.ArgumentParser(description='督办盯梢小助手V1.1；详见SKILL.md')
     p.add_argument('command'); p.add_argument('--workspace',default='./workspace-data'); p.add_argument('--adapter',help='可信宿主Python模块名，不含凭据')
     p.add_argument('--file'); p.add_argument('--mapping'); p.add_argument('--sheet'); p.add_argument('--task-id'); p.add_argument('--pending-id'); p.add_argument('--department'); p.add_argument('--risk',action='store_true'); p.add_argument('--text'); p.add_argument('--local',action='store_true',help='管理员显式离线运行，不代表真实同步或发送')
     args=p.parse_args()

@@ -13,7 +13,7 @@ import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt, font_manager
 from .store import DEPTS, FIELDS, TZ, now, style, safe_cell
-from .core import all_tasks, stats, CLOSED, STATES, RISKS, grouped, enqueue
+from .core import all_tasks, stats, CLOSED, STATES, RISKS, grouped, enqueue, current_analysis
 
 def chart_font():
     candidates=[f.fname for f in font_manager.fontManager.ttflist if 'Noto Sans CJK' in f.name or 'SimHei' in f.name or 'Microsoft YaHei' in f.name]
@@ -31,7 +31,7 @@ def build_scope(s,scope,folder):
     metrics=stats(own); live=[t for t in own if t['办理状态'] not in CLOSED]
     overdue=[t for t in live if t['原定截止日期']<datetime.now(TZ).date().isoformat()]
     risky=[t for t in live if t['当前AI风险等级'] in ['高','紧急'] or t['办理状态']=='受阻']
-    analyses={t['内部任务唯一ID']:s.get_config('analysis:'+t['内部任务唯一ID'],{}) for t in own}
+    analyses={t['内部任务唯一ID']:(current_analysis(s,t) or {}) for t in own}
     status=Counter(t['办理状态'] for t in own)
     risk=Counter(t['当前AI风险等级'] or '未研判' for t in live)
     causes=Counter(analyses[t['内部任务唯一ID']].get('category','尚未研判') for t in live)
@@ -40,7 +40,7 @@ def build_scope(s,scope,folder):
     for r in range(2,dash.max_row+1):
         if dash.cell(r,1).value in ['完成率','按期完成率']: dash.cell(r,2).number_format='0.00%'
     specs=[('状态分布',[(v,status[v]) for v in STATES]),('风险分布',[(v,risk[v]) for v in RISKS]),('拖延原因',list(causes.items()) or [('无在办任务',0)]),
-           ('部门完成情况',[(d,sum(t['办理状态']=='已完成' and t['主责部门']==d for t in own)) for d in DEPTS])]
+           ('部门完成情况',[(d,sum(t['办理状态']=='已完成' and t['主责部门']==d for t in own)) for d in (DEPTS if scope=='管理员综合' else [scope])])]
     for index,(title,rows) in enumerate(specs):
         ws=wb.create_sheet(title); add_table(ws,['分类','任务数'],rows)
         chart=PieChart() if title in ['状态分布','风险分布'] else BarChart()
@@ -71,6 +71,8 @@ def build_scope(s,scope,folder):
     doc=Document(); normal=doc.styles['Normal']; normal.font.name='Microsoft YaHei'; normal.font.size=Pt(10)
     normal.element.rPr.rFonts.set(qn('w:eastAsia'),'微软雅黑')
     doc.add_heading(scope+'督办工作分析报告',0); doc.add_paragraph('生成时间：'+now())
+    modes={s.get_config('analysis_meta:'+t['内部任务唯一ID'],{}).get('execution_mode','unverified') for t in own if current_analysis(s,t)}
+    if modes and modes!={'production'}: doc.add_paragraph('研判来源提示：包含模拟或未经真实宿主调用核验的结构化研判结果，不代表已验证真实大模型分析。')
     doc.add_heading('一、总体督办情况',1)
     ratio=lambda x: '无可计算数据' if x is None else f'{x:.2%}'
     doc.add_paragraph(f"当前共有任务{metrics['任务总数']}项，已完成{metrics['已完成数']}项，在办{metrics['未完成数']}项，已取消{metrics['已取消数']}项。完成率{ratio(metrics['完成率'])}，按期完成率{ratio(metrics['按期完成率'])}。当前逾期{metrics['逾期数量']}项，高风险{metrics['高风险任务']}项，受阻{metrics['受阻任务']}项。")
@@ -90,7 +92,7 @@ def build_scope(s,scope,folder):
     doc.add_heading('四、协调问题、整改措施及下阶段重点',1)
     for t in live:
         a=analyses[t['内部任务唯一ID']]
-        doc.add_paragraph(f"{t['任务名称']}：协调事项：{t['需要协调事项'] or '尚未研判'}；整改建议：{t['AI整改建议'] or '尚未研判'}；下阶段重点：{'；'.join(a.get('next_focus',[])) or '核实最新进展与实际阻塞事项'}。")
+        doc.add_paragraph(f"{t['任务名称']}：协调事项：{('；'.join(a.get('coordination',[]))) or '尚未有效研判'}；整改建议：{('；'.join(a.get('actions',[]))) or '尚未有效研判'}；下阶段重点：{'；'.join(a.get('next_focus',[])) or '核实最新进展与实际阻塞事项'}。")
     if not live: doc.add_paragraph('当前无在办任务。')
     doc.add_heading('五、协办及统计明细',1)
     if scope=='管理员综合':
@@ -105,27 +107,92 @@ def build_scope(s,scope,folder):
     img.unlink()
     return [xlsx,docx]
 
+def report_fingerprint(s):
+    volatile={'更新时间','最近更新时间','最新AI研判时间','最近邮件通知时间','最近通知等级','最近反馈来源'}
+    tasks=[{k:t[k] for k in FIELDS if k not in volatile} for t in sorted(all_tasks(s),key=lambda t:t['内部任务唯一ID'])]
+    analyses={t['内部任务唯一ID']:current_analysis(s,t) for t in all_tasks(s)}
+    payload={'date':datetime.now(TZ).date().isoformat(),'version':'1.1.0','tasks':tasks,'analyses':analyses,'analysis_modes':{t['内部任务唯一ID']:s.get_config('analysis_meta:'+t['内部任务唯一ID'],{}).get('execution_mode') for t in all_tasks(s)}}
+    return hashlib.sha256(json.dumps(payload,ensure_ascii=False,sort_keys=True).encode()).hexdigest()
+
+def _sync_dir(root):
+    fd=os.open(root,os.O_DIRECTORY)
+    try: os.fsync(fd)
+    finally: os.close(fd)
+
+def _journal_write(root,journal):
+    fd,tmp=tempfile.mkstemp(prefix='.publish-',dir=root)
+    try:
+        with os.fdopen(fd,'w',encoding='utf-8') as f:
+            json.dump(journal,f,ensure_ascii=False); f.flush(); os.fsync(f.fileno())
+        os.replace(tmp,root/'.report-publication.json'); _sync_dir(root)
+    finally:
+        if os.path.exists(tmp): os.unlink(tmp)
+
+def _point(root,target):
+    link=root/'reports'; tmp=root/'.reports-next'
+    if link.exists() and not link.is_symlink(): raise ValueError('reports路径被外部目录占用')
+    if tmp.is_symlink(): tmp.unlink()
+    if target is None:
+        if link.is_symlink(): link.unlink()
+    else:
+        tmp.symlink_to(target,target_is_directory=True); os.replace(tmp,link)
+    _sync_dir(root)
+
+def recover_publication(s,committed=None):
+    journal_path=s.root/'.report-publication.json'
+    if not journal_path.exists(): return
+    journal=json.loads(journal_path.read_text(encoding='utf-8'))
+    for key in ['old','new']:
+        name=journal.get(key)
+        if name is not None and (not isinstance(name,str) or not name.startswith('.reports-') or Path(name).name!=name):
+            raise ValueError('报告恢复日志目录不合法')
+    if committed is None: committed=s.get_config('reports',{}).get('hashes')==journal['hashes']
+    target=journal['new'] if committed else journal['old']
+    if target and not (s.root/target).is_dir(): raise ValueError('报告恢复所需版本缺失，请人工核对')
+    _point(s.root,target)
+    obsolete=journal['old'] if committed else journal['new']
+    if obsolete and obsolete!=target and (s.root/obsolete).exists(): shutil.rmtree(s.root/obsolete,ignore_errors=False)
+    journal_path.unlink(); _sync_dir(s.root)
+
+def _manifest_valid(s,manifest):
+    folder=s.root/'reports'
+    hashes=manifest.get('hashes',{})
+    return (len(hashes)==10 and folder.is_dir() and {p.name for p in folder.iterdir()}==set(hashes)
+            and all((folder/name).is_file() and hashlib.sha256((folder/name).read_bytes()).hexdigest()==digest for name,digest in hashes.items()))
+
 def generate(s):
-    """先生成并校验完整10件，再原子切换reports符号链接。旧目录在切换后清理。"""
-    root=s.root; stage=Path(tempfile.mkdtemp(prefix='.reports-',dir=root))
-    link=root/'reports'; temp_link=root/'.reports-next'
+    """业务快照未变时复用；发布日志+事务回调保证失败及中断可恢复。"""
+    root=s.root; link=root/'reports'; fingerprint=report_fingerprint(s)
+    previous=s.get_config('reports',{})
+    if previous.get('fingerprint')==fingerprint and _manifest_valid(s,previous):
+        return [str(link/name) for name in previous['hashes']]
     if link.exists() and not link.is_symlink(): raise ValueError('reports必须由程序管理；请先迁移旧的手工目录')
     old=link.resolve() if link.is_symlink() else None
+    if old and (old.parent!=root or not old.name.startswith('.reports-')): raise ValueError('报告链接指向非程序管理目录')
+    stage=Path(tempfile.mkdtemp(prefix='.reports-',dir=root)); published=False
     try:
         files=[]
         for scope in DEPTS+['管理员综合']: files.extend(build_scope(s,scope,stage))
         manifest={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
-        if temp_link.is_symlink(): temp_link.unlink()
-        temp_link.symlink_to(stage.name,target_is_directory=True); os.replace(temp_link,link)
-        s.set_config('reports',{'生成时间':now(),'hashes':manifest})
-        if old and old!=stage and old.parent==root and old.name.startswith('.reports-'): shutil.rmtree(old)
+        for p in files:
+            with p.open('rb') as f: os.fsync(f.fileno())
+        _sync_dir(stage)
+        journal={'old':old.name if old else None,'new':stage.name,'hashes':manifest}
+        _journal_write(root,journal)
+        # 即使切换或台账save失败，事务退出时也能恢复。
+        s._rollback_hooks.append(lambda:recover_publication(s,False))
+        s._commit_hooks.append(lambda:recover_publication(s,True))
+        _point(root,stage.name); published=True
+        s.set_config('reports',{'生成时间':now(),'hashes':manifest,'fingerprint':fingerprint,'version_dir':stage.name})
         return [str(link/p.name) for p in files]
-    except Exception:
-        if not link.is_symlink() or link.resolve()!=stage: shutil.rmtree(stage,ignore_errors=True)
+    except BaseException:
+        if not (root/'.report-publication.json').exists() and not published: shutil.rmtree(stage,ignore_errors=True)
         raise
 
 def queue_reports(s):
-    manifest=s.get_config('reports',{}).get('hashes',{}); queued=[]
+    info=s.get_config('reports',{})
+    if info.get('fingerprint')!=report_fingerprint(s) or not _manifest_valid(s,info): raise ValueError('报告与当前台账不一致，请先重新生成')
+    manifest=info['hashes']; queued=[]
     for scope in DEPTS+['管理员综合']:
         c=next(r for r in s.data['contacts'] if r['部门名称']==(DEPTS[0] if scope=='管理员综合' else scope))
         recipient=c.get('管理员邮箱','') if scope=='管理员综合' else c.get('主管邮箱','')

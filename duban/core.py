@@ -1,8 +1,9 @@
 from __future__ import annotations
-import copy, hashlib, json, re
+import copy, hashlib, json, math, re
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from datetime import date, datetime, timedelta
 from difflib import SequenceMatcher
-from .store import FIELDS, DEPTS, TZ, now, uid, stamp
+from .store import FIELDS, DEPTS, TZ, now, uid, stamp, safe_cell
 
 STATES=['未开始','办理中','受阻','待验收','已完成','已取消']
 RISKS=['未研判','低','中','高','紧急']
@@ -18,12 +19,20 @@ def day(value):
     return date.fromisoformat(str(value)).isoformat()
 
 def validate(fields,create=False):
+    if not isinstance(fields,dict): raise ValueError('任务字段必须为对象')
     bad=set(fields)-set(FIELDS)
     if bad: raise ValueError('未知任务字段：'+','.join(bad))
     out=dict(fields)
     if create:
         for key in ['任务名称','主责部门','原定截止日期']:
             if not out.get(key): raise ValueError('缺少关键字段：'+key)
+    for key in ['任务名称','主责部门','原定截止日期']:
+        if key in out and (out[key] is None or out[key]==''): raise ValueError('关键字段不能为空：'+key)
+    numeric={'完成百分比','重新开启次数','累计延期次数'}
+    for key,value in out.items():
+        if key in numeric or key in DATES or key=='协办部门': continue
+        if not isinstance(value,str) or len(value)>12000 or ILLEGAL_CHARACTERS_RE.search(value): raise ValueError('文本字段类型、长度或字符无效：'+key)
+        if key=='任务名称' and not value.strip(): raise ValueError('任务名称不能为空白')
     if '主责部门' in out and out['主责部门'] not in DEPTS: raise ValueError('主责部门不在四部门范围')
     if '办理状态' in out and out['办理状态'] not in STATES: raise ValueError('办理状态无效')
     if '协办部门' in out:
@@ -32,10 +41,13 @@ def validate(fields,create=False):
         if not isinstance(vals,list) or any(v not in DEPTS for v in vals): raise ValueError('协办部门无效')
         out['协办部门']='、'.join(dict.fromkeys(vals))
     for k in DATES:
-        if k in out and out[k] not in ('',None): out[k]=day(out[k])
+        if k in out:
+            out[k]=day(out[k]) if out[k] not in ('',None) else ''
     if '完成百分比' in out and out['完成百分比'] not in ('',None):
         p=out['完成百分比']
-        if isinstance(p,bool) or not isinstance(p,(float,int)) or not 0<=p<=100: raise ValueError('完成百分比须为0至100的明确数字')
+        if isinstance(p,bool) or not isinstance(p,(float,int)) or not math.isfinite(p) or not 0<=p<=100: raise ValueError('完成百分比须为0至100的明确数字')
+    for k in ['重新开启次数','累计延期次数']:
+        if k in out and (isinstance(out[k],bool) or not isinstance(out[k],int) or out[k]<0): raise ValueError('累计计数无效：'+k)
     if out.get('联系邮箱') and not EMAIL.fullmatch(out['联系邮箱']): raise ValueError('邮箱格式无效')
     return out
 
@@ -48,6 +60,7 @@ def find(s,tid):
 def create(s,fields,source='管理员',at=None):
     if set(fields)&set(PROTECTED): raise ValueError('不能写入系统保护字段')
     fields=validate(fields,True)
+    safe_cell({'字段':fields,'来源':source})
     if any(t['任务名称']==fields['任务名称'] and t['主责部门']==fields['主责部门'] for t in all_tasks(s)):
         raise ValueError('同名同部门任务已存在，请明确更新任务或提交待确认')
     clock=at or now(); stamp(clock)
@@ -64,13 +77,17 @@ def update(s,tid,fields,source='管理员',at=None,admin=True):
         allowed={'办理状态','完成百分比','最新办理进展','存在问题','延期原因','预计完成日期','实际完成日期'}
         if set(fields)-allowed: raise ValueError('主管反馈不能修改任务定义、联系人或原截止日期')
     fields=validate(fields); t=find(s,tid); before=copy.deepcopy(t); clock=at or now()
-    if stamp(clock)<stamp(t['最近更新时间']): return '旧反馈已跳过'
-    if not fields: return '无变更'
+    watermark=s.get_config('feedback_watermark:'+tid,t['最近更新时间'])
+    if stamp(clock)<max(stamp(t['最近更新时间']),stamp(watermark)): return '旧反馈已跳过'
+    if not admin: s.set_config('feedback_watermark:'+tid,clock)
+    if not fields or all(t.get(k)==v for k,v in fields.items()): return '无变更'
+    safe_cell({'原值':{k:before[k] for k in fields},'新值':fields,'来源':source})
     expected=fields.get('预计完成日期')
     if expected and expected!=t.get('预计完成日期') and expected>t['原定截止日期']:
         t['累计延期次数']=int(t.get('累计延期次数') or 0)+1
     was_closed=t['办理状态'] in CLOSED
     t.update(fields)
+    t['当前AI风险等级']='未研判'
     if t['办理状态']=='已完成' and not t['实际完成日期']: t['实际完成日期']=stamp(clock).date().isoformat()
     is_closed=t['办理状态'] in CLOSED
     if was_closed and not is_closed:
@@ -124,22 +141,35 @@ def stats(tasks,today=None):
 def grouped(tasks,key):
     return {v:stats([t for t in tasks if t.get(key)==v]) for v in sorted(set(t.get(key,'') for t in tasks))}
 
-def apply_analysis(s,tid,result):
+def task_fingerprint(task):
+    payload={k:task.get(k,'') for k in FIELDS if k not in PROTECTED}
+    return hashlib.sha256(json.dumps(payload,ensure_ascii=False,sort_keys=True).encode()).hexdigest()
+
+def current_analysis(s,task):
+    meta=s.get_config('analysis_meta:'+task['内部任务唯一ID'],{})
+    if not isinstance(meta,dict) or meta.get('fingerprint')!=task_fingerprint(task): return None
+    return s.get_config('analysis:'+task['内部任务唯一ID'])
+
+def apply_analysis(s,tid,result,source_mode="unverified"):
     t=find(s,tid)
     required={'risk','facts','hypotheses','evidence','actions','coordination','category','next_focus'}
-    if set(result)!=required or result['risk'] not in RISKS[1:]: raise ValueError('AI研判结构无效')
+    if not isinstance(result,dict) or set(result)!=required or result['risk'] not in RISKS[1:]: raise ValueError('AI研判结构无效')
     if not isinstance(result['category'],str) or not result['category'].strip(): raise ValueError('原因分类应为非空文本')
     for key in required-{'risk','category'}:
         if not isinstance(result[key],list) or not all(isinstance(x,str) for x in result[key]): raise ValueError('AI研判列表无效')
-    if not result['evidence']: raise ValueError('AI研判必须提供依据')
+    if not result['evidence'] or any(not e.strip() for e in result['evidence']): raise ValueError('AI研判必须提供非空原文依据')
     # 引证必须包含可查当前字段或72小时历史原文；不是模型自报置信度。
     corpus='\n'.join(str(v) for k,v in t.items() if k not in AI_FIELDS)+'\n'+json.dumps([r['内容'] for r in s.data['history'] if r['任务ID']==tid and r['类型']!='AI研判'],ensure_ascii=False)
     if any(e not in corpus for e in result['evidence']): raise ValueError('AI引用了不可核对的依据')
+    safe_cell(result)
     old=t['当前AI风险等级']
-    t.update({'当前AI风险等级':result['risk'],'可能拖延原因':'；'.join(result['hypotheses']),
+    changes={'当前AI风险等级':result['risk'],'可能拖延原因':'；'.join(result['hypotheses']),
               'AI分析依据':'；'.join(result['evidence']),'AI整改建议':'；'.join(result['actions']),
-              '需要协调事项':'；'.join(result['coordination']),'最新AI研判时间':now()})
+              '需要协调事项':'；'.join(result['coordination']),'最新AI研判时间':now()}
+    validate(changes)
+    t.update(changes)
     s.set_config('analysis:'+tid,result)
+    s.set_config('analysis_meta:'+tid,{'fingerprint':task_fingerprint(t),'time':now(),'execution_mode':source_mode})
     s.history(tid,'AI研判',result)
     return old!=result['risk']
 
@@ -147,14 +177,15 @@ def scan(s,adapter=None,force=False):
     result={'已研判':0,'需宿主AI研判':[],'失败':[]}
     for t in s.data['active']:
         last=t.get('最新AI研判时间'); days=(date.fromisoformat(t['原定截止日期'])-datetime.now(TZ).date()).days
-        due=force or not last or stamp(t['最近更新时间'])>stamp(last) or days<=7 or (datetime.now(TZ)-stamp(last)).days>=7
+        due=force or not last or not current_analysis(s,t) or stamp(t['最近更新时间'])>stamp(last) or days<=7 or (datetime.now(TZ)-stamp(last)).days>=7
         if not due: continue
         tid=t['内部任务唯一ID']
         if not adapter:
             result['需宿主AI研判'].append(tid); continue
         try:
             history=[r for r in s.data['history'] if r['任务ID']==tid]
-            apply_analysis(s,tid,adapter.analyze(copy.deepcopy(t),copy.deepcopy(history)))
+            from .adapters import _mode
+            apply_analysis(s,tid,adapter.analyze(copy.deepcopy(t),copy.deepcopy(history)),_mode(adapter))
             result['已研判']+=1
         except Exception as e:
             s.pending('AI研判失败',{'任务ID':tid,'错误类型':type(e).__name__}); result['失败'].append(tid)
@@ -176,43 +207,60 @@ def match_feedback(s,item,sender,at):
     return t
 
 def process_mail(s,mail,plan):
+    if not isinstance(mail,dict): raise ValueError('邮件信封无效')
     mid=mail['id']; sender=mail['sender']; stamp(mail['sent_at'])
-    if not mail.get('body') or not isinstance(plan,list): raise ValueError('邮件正文或AI拆分结果缺失')
-    content_hash=hashlib.sha256((sender+'\n'+mail['sent_at']+'\n'+mail['body']).encode()).hexdigest()
+    if not isinstance(mid,str) or not mid.strip() or not isinstance(sender,str) or not EMAIL.fullmatch(sender): raise ValueError('邮件ID或发件人无效')
+    sources=mail.get('evidence_sources',{'body':mail.get('body','')})
+    if not isinstance(sources,dict) or not any(sources.values()) or not isinstance(plan,list): raise ValueError('邮件内容或AI拆分结果缺失')
+    content_hash=hashlib.sha256(json.dumps([sender,mail['sent_at'],mail.get('body',''),mail.get('attachment_digests',{})],ensure_ascii=False,sort_keys=True).encode()).hexdigest()
     existing=[r for r in s.data['mail'] if r['邮件ID']==mid]
     if existing: return {'重复邮件':1}
+    duplicate=next((r for r in s.data['mail'] if isinstance(r.get('内容'),dict) and r['内容'].get('hash')==content_hash),None)
+    if duplicate:
+        s.data['mail'].append({'ID':uid(),'时间':now(),'邮件ID':mid,'状态':'重复内容','内容':{'hash':content_hash,'关联邮件ID':duplicate['邮件ID']}})
+        return {'重复邮件':1}
     counts={'新增任务':0,'更新任务':0,'办结任务':0,'重新开启任务':0,'待确认':0,'旧反馈跳过':0}
     seen=set()
     for item in plan:
         snapshot=copy.deepcopy(s.data)
         try:
+            if not isinstance(item,dict): raise ValueError('邮件条目必须为对象')
+            source=sources.get(item.get('source_id','body'))
+            if not isinstance(source,str) or not source: raise ValueError('原文证据来源缺失')
             if item.get('action')=='create':
                 allowed=s.get_config('正式下达邮箱',[])
                 quote=item.get('issuance_quote','')
                 fields=item.get('fields',{})
                 evidence=item.get('evidence',[])
                 if sender.casefold() not in [x.casefold() for x in allowed]: raise ValueError('发件人未获管理员配置的正式下达权限')
-                if not quote or quote not in mail['body'] or not re.search('下达|交办|督办',quote): raise ValueError('缺少明确正式下达原文')
-                if not evidence or any(not e or e not in mail['body'] for e in evidence): raise ValueError('新增证据不可核对')
+                if not quote or quote not in source or not re.search('下达|交办|督办',quote): raise ValueError('缺少明确正式下达原文')
+                if not evidence or any(not e or e not in source for e in evidence): raise ValueError('新增证据不可核对')
                 if fields.get('主责部门','') not in quote or fields.get('任务名称','') not in quote or fields.get('原定截止日期','') not in quote: raise ValueError('任务定义、部门或明确截止日期不在下达原文')
                 create(s,fields,'邮件:'+mid,mail['sent_at']); counts['新增任务']+=1
                 continue
             t=match_feedback(s,item,sender,mail['sent_at'])
             if t['内部任务唯一ID'] in seen: raise ValueError('同邮件同任务多条结果，请合并字段后确认')
             evidence=item.get('evidence',[])
-            if any(not isinstance(e,str) or not e or e not in mail['body'] for e in evidence): raise ValueError('证据不在邮件正文')
+            if any(not isinstance(e,str) or not e or e not in source for e in evidence): raise ValueError('证据不在邮件正文')
             anchors=item.get('anchors',[])
             # anchors为邮件原文与任务定义共有的业务锚点；多个相近候选同样命中时拒绝。
-            if not anchors or any(not isinstance(a,str) or len(a)<2 or a not in mail['body'] or a not in t['任务名称']+' '+t['任务内容'] for a in anchors): raise ValueError('缺少跨正文和任务定义的业务锚点')
+            if not anchors or any(not isinstance(a,str) or len(a)<2 or a not in source or a not in t['任务名称']+' '+t['任务内容'] for a in anchors): raise ValueError('缺少跨正文和任务定义的业务锚点')
             peers=[x for x in all_tasks(s) if x['主责部门']==t['主责部门'] and all(a in x['任务名称']+' '+x['任务内容'] for a in anchors)]
             if len(peers)!=1: raise ValueError('业务锚点不能唯一定位任务')
             fields=item.get('fields',{})
-            if fields.get('办理状态')=='已完成' and re.search(r'(未|尚未|没有|尚未全部)完成', ''.join(evidence)):
+            if any(v is None or v=='' for v in fields.values()): raise ValueError('邮件不能清空未提及的业务字段')
+            if fields.get('办理状态')=='已完成' and re.search(r'(未|尚未|没有|尚未全部)完成|待验收|等待.*验收|未验收', ''.join(evidence)):
                 raise ValueError('办结状态与原文未完成表述矛盾')
+            if t['办理状态'] in CLOSED and fields.get('办理状态',t['办理状态']) not in CLOSED:
+                if not re.search(r'未完成|尚未|没有完成|仍有|尚有|未交付|待.*验收|还有|仍需', ''.join(evidence)):
+                    raise ValueError('重新开启缺少明确尚未完成证据')
             # 完成百分比必须在本条原文中明确出现，不能模型估算。
             if '完成百分比' in fields:
-                p=fields['完成百分比']; token=f'{p:g}%' if isinstance(p,(int,float)) else ''
-                if not token or token not in ''.join(evidence).replace('％','%'): raise ValueError('原文未明确完成百分比')
+                p=fields['完成百分比']
+                tokens=re.findall(r'(?<![\d.])(\d+(?:\.\d+)?)\s*[%％]', ''.join(evidence))
+                if isinstance(p,bool) or not isinstance(p,(int,float)) or not any(float(v)==p for v in tokens): raise ValueError('原文未明确完成百分比')
+            if str(t.get('最近反馈来源','')).startswith('邮件:') and t['最近反馈来源']!='邮件:'+mid and stamp(t['最近更新时间'])==stamp(mail['sent_at']) and any(t.get(k)!=v for k,v in fields.items()):
+                raise ValueError('不同邮件同一时间存在矛盾反馈，无法判定先后')
             outcome=update(s,t['内部任务唯一ID'],fields,'邮件:'+mid,mail['sent_at'],False)
             seen.add(t['内部任务唯一ID'])
             key={'更新':'更新任务','办结':'办结任务','重新开启':'重新开启任务','旧反馈已跳过':'旧反馈跳过'}.get(outcome)
@@ -226,7 +274,8 @@ def process_mail(s,mail,plan):
     return counts
 
 def enqueue(s,recipient,level,body,key,tid='',attachments=None):
-    if not EMAIL.fullmatch(recipient or ''):
+    recipient=recipient.strip().casefold() if isinstance(recipient,str) else ''
+    if not EMAIL.fullmatch(recipient):
         s.pending('缺少合法收件人',{'任务ID':tid,'等级':level}); return None
     if any(r['去重键']==key and r['状态'] not in ['已失效'] for r in s.data['outbox']): return None
     row={'ID':uid(),'时间':now(),'任务ID':tid,'接收人':recipient,'等级':level,'去重键':key,'状态':'待授权','尝试次数':0,
@@ -241,7 +290,7 @@ def warnings(s,today=None):
         if d<0: levels.append('逾期督办')
         elif d in [7,3,1]: levels.append({7:'关注提醒',3:'临期预警',1:'紧急预警'}[d])
         # 以已入队/发送等级的最高值判定首次发现或升级；风险回落再升不重复通知相同等级。
-        if t['当前AI风险等级'] in ['高','紧急']: levels.append('AI'+t['当前AI风险等级']+'风险')
+        if t['当前AI风险等级'] in ['高','紧急'] and current_analysis(s,t): levels.append('AI'+t['当前AI风险等级']+'风险')
         c=next(r for r in s.data['contacts'] if r['部门名称']==t['主责部门'])
         for level in levels:
             targets=[t['联系邮箱'] or c.get('主管邮箱','')]
@@ -250,6 +299,7 @@ def warnings(s,today=None):
                 cycle=today.isoformat() if level=='逾期督办' else t['原定截止日期']
                 key=f"{t['内部任务唯一ID']}|{t['重新开启次数']}|{level}|{cycle}|{email}"
                 body='\n'.join([f'{k}：{t[k] or "未提供"}' for k in ['任务名称','主责部门','责任人','原定截止日期','预计完成日期','最新办理进展','当前AI风险等级','可能拖延原因','AI分析依据','AI整改建议']])
+                if not current_analysis(s,t): body+='\n注意：当前任务尚无有效AI研判，前次原因与建议不得作为当前已核实事实。'
                 body+='\nAI可能原因属于待核实研判。请反馈真实进展、阻塞事项及下一步计划。'
                 q=enqueue(s,email,level,body,key,t['内部任务唯一ID'])
                 if q: queued.append(q)

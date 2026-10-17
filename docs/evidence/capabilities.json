@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-17",
+  "timezone": "Asia/Shanghai",
+  "runtime": "Linux/Python3.12.14",
+  "dependencies": {
+    "openpyxl": "3.1.5",
+    "python-docx": "1.2.0",
+    "matplotlib": "3.10.8",
+    "pypdf": "6.10.0"
+  },
+  "current_environment_capabilities": [],
+  "configured_mail_or_model_credentials": false,
+  "MobileWork_runtime_attached": false,
+  "cmcc_mail_SKILL_provided": false,
+  "claim": "当前会话未接入，不是已证明MobileWork不支持"
+}

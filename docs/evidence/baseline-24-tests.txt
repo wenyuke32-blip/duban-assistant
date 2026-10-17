@@ -1,0 +1,29 @@
+test_ai_evidence_and_noninvented_values (test_business.Business.test_ai_evidence_and_noninvented_values) ... ok
+test_authorization_blocked (test_business.Business.test_authorization_blocked) ... ok
+test_cancelled_and_primary_department_statistics (test_business.Business.test_cancelled_and_primary_department_statistics) ... ok
+test_close_reopen_original_deadline (test_business.Business.test_close_reopen_original_deadline) ... ok
+test_corrupt_ledger_never_silently_initialized (test_business.Business.test_corrupt_ledger_never_silently_initialized) ... ok
+test_dispatch_unknown_never_retry_without_reconcile (test_business.Business.test_dispatch_unknown_never_retry_without_reconcile) ... ok
+test_formula_injection_is_text (test_business.Business.test_formula_injection_is_text) ... ok
+test_history_72h (test_business.Business.test_history_72h) ... ok
+test_import_and_partial_failure (test_business.Business.test_import_and_partial_failure) ... ok
+test_mail_cannot_delete_or_change_deadline (test_business.Business.test_mail_cannot_delete_or_change_deadline) ... ok
+test_mail_sender_ambiguity_and_false_percent (test_business.Business.test_mail_sender_ambiguity_and_false_percent) ... ok
+test_mail_update_and_dedup (test_business.Business.test_mail_update_and_dedup) ... ok
+test_multitask_and_explicit_new_assignment (test_business.Business.test_multitask_and_explicit_new_assignment) ... ok
+test_old_feedback_preserves_fields (test_business.Business.test_old_feedback_preserves_fields) ... ok
+test_persistence_and_init (test_business.Business.test_persistence_and_init) ... ok
+test_replace_failure_preserves_ledger (test_business.Business.test_replace_failure_preserves_ledger) ... ok
+test_report_ten_files_real_charts_and_isolation (test_business.Business.test_report_ten_files_real_charts_and_isolation) ... ok
+test_sync_blocked_without_adapter (test_business.Business.test_sync_blocked_without_adapter) ... ok
+test_transaction_rollback_and_backup (test_business.Business.test_transaction_rollback_and_backup) ... ok
+test_warning_dedup_and_overdue_daily (test_business.Business.test_warning_dedup_and_overdue_daily) ... ok
+test_contact_change_invalidates_old_queue (test_cli.CLI.test_contact_change_invalidates_old_queue) ... ok
+test_excel_import_and_docx_pdf_extract (test_cli.CLI.test_excel_import_and_docx_pdf_extract) ... ok
+test_full_offline_and_restart (test_cli.CLI.test_full_offline_and_restart) ... ok
+test_mail_cursor_checkpoint_and_retry (test_cli.CLI.test_mail_cursor_checkpoint_and_retry) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 11.017s
+
+OK

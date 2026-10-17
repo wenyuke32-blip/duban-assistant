@@ -1,0 +1,169 @@
+{
+  "mode": "simulation",
+  "真实邮箱发送": 0,
+  "receipts": {
+    "e68b4d17b4ab420c96705c202eeb5f8b": {
+      "recipient": "d0@example.invalid",
+      "attachments": [],
+      "message_id": "SIM-e68b4d17b4ab420c96705c202eeb5f8b",
+      "execution_mode": "simulation"
+    },
+    "28593559ae4546f49ef03f5f4f4b0811": {
+      "recipient": "d1@example.invalid",
+      "attachments": [],
+      "message_id": "SIM-28593559ae4546f49ef03f5f4f4b0811",
+      "execution_mode": "simulation"
+    },
+    "fcc34095d1524d589d2410ee7886011a": {
+      "recipient": "admin@example.invalid",
+      "attachments": [],
+      "message_id": "SIM-fcc34095d1524d589d2410ee7886011a",
+      "execution_mode": "simulation"
+    },
+    "898b40e53bff4440933e84cd2f745caa": {
+      "recipient": "d1@example.invalid",
+      "attachments": [],
+      "message_id": "SIM-898b40e53bff4440933e84cd2f745caa",
+      "execution_mode": "simulation"
+    },
+    "30e0c11cc2264d0f8a61c6ef567c09c8": {
+      "recipient": "admin@example.invalid",
+      "attachments": [],
+      "message_id": "SIM-30e0c11cc2264d0f8a61c6ef567c09c8",
+      "execution_mode": "simulation"
+    },
+    "75ac3ca935a94ce48c8f1646673853ad": {
+      "recipient": "d2@example.invalid",
+      "attachments": [],
+      "message_id": "SIM-75ac3ca935a94ce48c8f1646673853ad",
+      "execution_mode": "simulation"
+    },
+    "076942f642194296bffdb3534ceb18c0": {
+      "recipient": "d0@example.invalid",
+      "attachments": [
+        "市场部督办报告.xlsx",
+        "市场部督办报告.docx"
+      ],
+      "message_id": "SIM-076942f642194296bffdb3534ceb18c0",
+      "execution_mode": "simulation"
+    },
+    "eabc854b77f349488ddafaba876f7d6d": {
+      "recipient": "d1@example.invalid",
+      "attachments": [
+        "政企部督办报告.xlsx",
+        "政企部督办报告.docx"
+      ],
+      "message_id": "SIM-eabc854b77f349488ddafaba876f7d6d",
+      "execution_mode": "simulation"
+    },
+    "27f8ee34e7ad4c31ab907730fc3242f0": {
+      "recipient": "d2@example.invalid",
+      "attachments": [
+        "网络部督办报告.xlsx",
+        "网络部督办报告.docx"
+      ],
+      "message_id": "SIM-27f8ee34e7ad4c31ab907730fc3242f0",
+      "execution_mode": "simulation"
+    },
+    "5ed993cd38fe45e1bd5c987da7f228f6": {
+      "recipient": "d3@example.invalid",
+      "attachments": [
+        "综合部督办报告.xlsx",
+        "综合部督办报告.docx"
+      ],
+      "message_id": "SIM-5ed993cd38fe45e1bd5c987da7f228f6",
+      "execution_mode": "simulation"
+    },
+    "a574d18408d24387b375c52d8d23c3ce": {
+      "recipient": "admin@example.invalid",
+      "attachments": [
+        "管理员综合督办报告.xlsx",
+        "管理员综合督办报告.docx"
+      ],
+      "message_id": "SIM-a574d18408d24387b375c52d8d23c3ce",
+      "execution_mode": "simulation"
+    }
+  },
+  "attachments": [
+    {
+      "simulation_id": "076942f642194296bffdb3534ceb18c0",
+      "recipient": "d0@example.invalid",
+      "name": "市场部督办报告.xlsx",
+      "size": 19956,
+      "sha256": "7b7a4ebd08ad0c29ff82286a040c66c65a84849c5d7bfc6a2430ae993558dcc6",
+      "byte_equal": true
+    },
+    {
+      "simulation_id": "076942f642194296bffdb3534ceb18c0",
+      "recipient": "d0@example.invalid",
+      "name": "市场部督办报告.docx",
+      "size": 57639,
+      "sha256": "18fa28afb5e6baba5fd4db632e31e16d67989675a01e578567b9ccd04feafda1",
+      "byte_equal": true
+    },
+    {
+      "simulation_id": "eabc854b77f349488ddafaba876f7d6d",
+      "recipient": "d1@example.invalid",
+      "name": "政企部督办报告.xlsx",
+      "size": 21211,
+      "sha256": "ffc58b7703b604c298ce9f6934a9ea094602b62a43d3d5e59d002b0d482992a9",
+      "byte_equal": true
+    },
+    {
+      "simulation_id": "eabc854b77f349488ddafaba876f7d6d",
+      "recipient": "d1@example.invalid",
+      "name": "政企部督办报告.docx",
+      "size": 57793,
+      "sha256": "88bfc5b8c3b55b3a1dc24cde58e828668d80228a759f071c1cd74b1516fff020",
+      "byte_equal": true
+    },
+    {
+      "simulation_id": "27f8ee34e7ad4c31ab907730fc3242f0",
+      "recipient": "d2@example.invalid",
+      "name": "网络部督办报告.xlsx",
+      "size": 19985,
+      "sha256": "ff7c206bad8096557073363a28fffe97fa9cc839376556ad81b5a1befc676c68",
+      "byte_equal": true
+    },
+    {
+      "simulation_id": "27f8ee34e7ad4c31ab907730fc3242f0",
+      "recipient": "d2@example.invalid",
+      "name": "网络部督办报告.docx",
+      "size": 57604,
+      "sha256": "942675ce87ba2a0a7e29e8aa140a50615aefd79062cd4a90694f616aae8e6434",
+      "byte_equal": true
+    },
+    {
+      "simulation_id": "5ed993cd38fe45e1bd5c987da7f228f6",
+      "recipient": "d3@example.invalid",
+      "name": "综合部督办报告.xlsx",
+      "size": 20058,
+      "sha256": "2930b5bea9f47c60014a586d77caa9633403ce2d23e4da12df88e0b5d88da19a",
+      "byte_equal": true
+    },
+    {
+      "simulation_id": "5ed993cd38fe45e1bd5c987da7f228f6",
+      "recipient": "d3@example.invalid",
+      "name": "综合部督办报告.docx",
+      "size": 63835,
+      "sha256": "f219fbce42f56df767db03c7a51a0646781046be1e4f3171e1ecb3c54758f7f6",
+      "byte_equal": true
+    },
+    {
+      "simulation_id": "a574d18408d24387b375c52d8d23c3ce",
+      "recipient": "admin@example.invalid",
+      "name": "管理员综合督办报告.xlsx",
+      "size": 22171,
+      "sha256": "bad527b95faf5a1d569acff5ef509e2c408d2e2a2e10eab3171c4bb4a6b47853",
+      "byte_equal": true
+    },
+    {
+      "simulation_id": "a574d18408d24387b375c52d8d23c3ce",
+      "recipient": "admin@example.invalid",
+      "name": "管理员综合督办报告.docx",
+      "size": 59962,
+      "sha256": "286be4b15fea293124b3440c304b4b0ff516cf980c3ea619c475ad3daf4cb036",
+      "byte_equal": true
+    }
+  ]
+}

@@ -82,7 +82,7 @@ class Business(unittest.TestCase):
             t=self.add(s); mail,item=self.mail(s,t)
             item['fields']={'原定截止日期':'2099-01-01'}
             a=core.process_mail(s,mail,[item]); self.assertEqual(a['待确认'],1)
-            mail['id']='m2'; item['action']='delete'
+            mail['id']='m2'; mail['body']+='，要求删除'; item['action']='delete'
             a=core.process_mail(s,mail,[item]); self.assertEqual(a['待确认'],1)
             self.assertEqual(len(s.data['active']),1)
     def test_mail_sender_ambiguity_and_false_percent(self):
@@ -166,6 +166,7 @@ class Business(unittest.TestCase):
             self.assertIn('市场部专属任务',text); self.assertNotIn('政企部专属任务',text)
             self.assertEqual(len(queue_reports(s)),5)
             before=(s.root/'reports').resolve()
+            core.update(s,s.data['active'][0]['内部任务唯一ID'],{'最新办理进展':'发布失败前的业务变更'})
             with patch('duban.reports.build_scope',side_effect=RuntimeError('disk')):
                 with self.assertRaises(RuntimeError): generate(s)
             self.assertEqual((s.root/'reports').resolve(),before)
