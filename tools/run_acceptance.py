@@ -79,7 +79,7 @@ def main():
     hashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in first_target.iterdir()}
     check('1','五封报告正确入队',len(cli(local,'send-reports')['结果']['入队'])==5)
     check('1','相同报告再次生成不重复入队',len(cli(local,'reports')['结果'])==10 and cli(local,'send-reports')['结果']['入队']==[])
-    check('1','未配置邮箱时不会报告发送成功',cli(local,'dispatch')['结果']['status']=='blocked')
+    check('1','无适配器时只返回原生cmcc-mail待执行指令',cli(local,'dispatch')['结果'].get('action')=='call_cmcc_mail')
     check('1','重复报告保持同一版本及全部字节不变',(local/'reports').resolve()==first_target and hashes=={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in first_target.iterdir()})
     # 子进程真实退出，发生于报告已切换但台账尚未提交之间。
     code='from duban.store import Store; from duban import core; from duban.reports import generate; import os,sys\ns=Store(sys.argv[1])\nwith s.transaction():\n core.update(s,sys.argv[2],{"最新办理进展":"进程中断前未提交内容"})\n generate(s)\n os._exit(19)'
@@ -135,7 +135,7 @@ def main():
     nl=cli(sim,'nl','--text','模拟自然语言输入，实际计划由fixture固定提供',sim=True)
     check('2','模拟自然语言入口只验证计划执行',nl['执行摘要']['本次新增任务数']==1)
     summary={'time':datetime.now(TZ).isoformat(),'passed':sum(c['pass'] for c in checks),'failed':sum(not c['pass'] for c in checks),
-      '真实邮箱发送':0,'真实模型调用':0,'checks':checks,'limitations':['MobileWork宿主执行权限/重启持久化未验证','cmcc-mail真实工具绑定未实现','真实邮件语义匹配和AI原因质量未验证','真实附件下载/发送及收件箱投递未验证','正式无人值守授权未核实']}
+      '真实邮箱发送':0,'真实模型调用':0,'checks':checks,'limitations':['MobileWork宿主执行权限/重启持久化未验证','cmcc-mail自然语言调用在目标平台的实际运行未验证','真实邮件语义匹配和AI原因质量未验证','真实附件下载/发送及收件箱投递未验证','正式无人值守授权未核实']}
     (out/'checks.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2),encoding='utf-8')
     (out/'cli-trace.json').write_text(json.dumps(trace,ensure_ascii=False,indent=2),encoding='utf-8')
     print(json.dumps({k:v for k,v in summary.items() if k!='checks'},ensure_ascii=False,indent=2))

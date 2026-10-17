@@ -1,0 +1,257 @@
+[
+  {
+    "path": ".gitignore",
+    "sha256": "02f439bd2aa5b0d6e0b00d31067a87fbf9a1a3f4cbe47901180e7597f14ec309",
+    "size": 108
+  },
+  {
+    "path": "README.md",
+    "sha256": "26f8f46c2cff65cb2fa7238010a304980a71e8ea3f2556c31957230715f0d464",
+    "size": 1964
+  },
+  {
+    "path": "SKILL.md",
+    "sha256": "576add4f1a81ce741d4914adbb6e5c9ce0eb932a68ab849c36e775fb710af6db",
+    "size": 8006
+  },
+  {
+    "path": "docs/MobileWork原生部署_V1.2.md",
+    "sha256": "01f85974fb53eced7543023e00239c58c3cfabb5732ee76bff06a60446cea098",
+    "size": 6455
+  },
+  {
+    "path": "docs/V1.1历史验收报告.md",
+    "sha256": "bd5f12bd5e8e2905337f2d44167705ae7e98d95046745b28711cbc262489d779",
+    "size": 8962
+  },
+  {
+    "path": "docs/业务规则与预警模板.md",
+    "sha256": "377f7ac7751492bd7b32291cfd3d3476dbe871f4f8d044ad0e0ecc064466f885",
+    "size": 2371
+  },
+  {
+    "path": "docs/开发环境检测.json",
+    "sha256": "ae372927dc6386d023d53a6dba38b42dfeb0a03c7dd7e5131b4e04d241f1b725",
+    "size": 419
+  },
+  {
+    "path": "docs/技术方案与交付边界.md",
+    "sha256": "b5284d3c877e30bc530e4de245934cced9b1726743c5a2946f4c61eec5901dbb",
+    "size": 1449
+  },
+  {
+    "path": "docs/日常使用指南.md",
+    "sha256": "8b3a90c3675c3bec886574a21b60ba4600fed5c7c331074acc20d49ea4185c72",
+    "size": 4126
+  },
+  {
+    "path": "docs/本地测试结果.txt",
+    "sha256": "6ac4d1e0450dc16d71fce2f59bc968d36769d9ba8dd4902ef54441a129f6b3fe",
+    "size": 7454
+  },
+  {
+    "path": "docs/测试说明.md",
+    "sha256": "b8979d162458798a8bb9404d7154fc3689d51fbf0779242f70a63183763aff57",
+    "size": 657
+  },
+  {
+    "path": "docs/端到端验收报告.md",
+    "sha256": "cee0327d0d928d72710d95cb0bd711fee7519e9f61bf0d02e356ce46f5ead0b4",
+    "size": 4706
+  },
+  {
+    "path": "docs/邮件与宿主适配.md",
+    "sha256": "4ad1c36a6826f2a7b2fc55a83909b23090cf15606687ec9855f084f41c6c1ed5",
+    "size": 1375
+  },
+  {
+    "path": "docs/部署与恢复.md",
+    "sha256": "a4772bb6a58d8eee0f607f3abcfbdf5d1c6f2c3b35da79654933333fea6015f0",
+    "size": 4816
+  },
+  {
+    "path": "docs/部署操作说明_V1.1.md",
+    "sha256": "b69a4f9b4124aaee087b05ee4af18e632c167e20e2145e59fae37c1852b1673f",
+    "size": 6207
+  },
+  {
+    "path": "docs/验收清单.md",
+    "sha256": "bf2119b3cf5791afbfec4a7ec01f00bfb45d51cb42b4144c35506d4148fd21f4",
+    "size": 3039
+  },
+  {
+    "path": "duban/__init__.py",
+    "sha256": "bcd6abc321dd7dfd136d6444ed183e53914da9df237013bd59bf96019065dcbf",
+    "size": 77
+  },
+  {
+    "path": "duban/__main__.py",
+    "sha256": "cd22fe3380d2c330c6a9096dc19eaacfbd7d64772096693239acd55f15e3bd36",
+    "size": 19355
+  },
+  {
+    "path": "duban/adapters.py",
+    "sha256": "5a7142ee771a6d6d4aba86987bdab5f992ac1d4e47e7970e114be77a30e29c32",
+    "size": 5868
+  },
+  {
+    "path": "duban/core.py",
+    "sha256": "9acd2365c1b51bb59039e5f7f0ff3300f7c0a2535a26a3031d5b113960369df2",
+    "size": 23325
+  },
+  {
+    "path": "duban/native.py",
+    "sha256": "236c4fdcd8ebecfb957e1752d0f01d4e9e64a59a86ed2631ed313b7ce1a4005c",
+    "size": 14038
+  },
+  {
+    "path": "duban/reports.py",
+    "sha256": "5ab8d07a0b1f318baf6aaf78cc14ce19ac44c3dd038da30efff126caa953c91b",
+    "size": 19305
+  },
+  {
+    "path": "duban/store.py",
+    "sha256": "e73e15029ee97bdf6091d09b8f7975fa86554def4143f5b8f67f078fd66362ba",
+    "size": 10825
+  },
+  {
+    "path": "examples/多指令.json",
+    "sha256": "880e58bd9ad7a34bc0a4369ab149444e989ef390f493765b656c802ec5847bd5",
+    "size": 188
+  },
+  {
+    "path": "examples/新增任务.json",
+    "sha256": "55822e1743a87eff0dfcbd5c7542fa0e602887ca2884ac56b0f4f49816dd2d98",
+    "size": 263
+  },
+  {
+    "path": "examples/更新进度.json",
+    "sha256": "4eec4e05fccb496f3b127fec8b046c7735613bc787077846046779bc019de133",
+    "size": 126
+  },
+  {
+    "path": "examples/本地验收报告说明.md",
+    "sha256": "a97c9d00ba2e907bb58f1bc161f9225cdce2a1ef7bbe6f8d9f045c35113ad09d",
+    "size": 508
+  },
+  {
+    "path": "examples/正式下达邮箱配置.json",
+    "sha256": "c67d82e62da790954658268bee730f18809d26a6bf1ba82d591a0eafa0bba66f",
+    "size": 26
+  },
+  {
+    "path": "examples/联系人.json",
+    "sha256": "0df575812a5135c57901f7cee516b68574f8df6808e52c89db5ca46db19b42ab",
+    "size": 205
+  },
+  {
+    "path": "prompts/admin.md",
+    "sha256": "7204b2ba8aac9e6ad0868352df0b65e59c78f6a607ed8c9d9635851ecbcd1a09",
+    "size": 1341
+  },
+  {
+    "path": "prompts/analysis.md",
+    "sha256": "cf436217c3f71afd5513fb7a879b82fb20e9946ba5a3adc2c841d28074843fd5",
+    "size": 1471
+  },
+  {
+    "path": "prompts/analysis.schema.json",
+    "sha256": "0d767d34a316ea780deebfef19a47bd63cb91667981bb6a6eeae97f149e37dce",
+    "size": 1151
+  },
+  {
+    "path": "prompts/cmcc_mail_calls.md",
+    "sha256": "26817b7de97e48192cdc0a9061050a3d23a6f2a25b4dec4290fc55874b43ad27",
+    "size": 1575
+  },
+  {
+    "path": "prompts/feedback.md",
+    "sha256": "5c2afbc04d0dc0ee7ccfbf343b465fd2e4c4ee2840f82862acc6d10bc337a958",
+    "size": 2661
+  },
+  {
+    "path": "prompts/feedback.schema.json",
+    "sha256": "c290240b4bca781000e3cd7a5a89c02e41113c2904ebe993bd794803abceda6d",
+    "size": 3639
+  },
+  {
+    "path": "prompts/mobilework_native.md",
+    "sha256": "5fad7d73ad079b57e30b9fb53c3133091db7a7671f54325b0fff013bd097c1f9",
+    "size": 2153
+  },
+  {
+    "path": "prompts/report.md",
+    "sha256": "8a21e26a572b466c4d2cc6a84f25b64749d4194f65e6e7474da4af613597ff86",
+    "size": 1265
+  },
+  {
+    "path": "prompts/自动任务调用提示词.md",
+    "sha256": "aa7b99496b3d7e44ef732e55ceb120b24ee1b45428ec203fe847d8f237872b25",
+    "size": 1250
+  },
+  {
+    "path": "pyproject.toml",
+    "sha256": "4b7417361e9a56a9f4e81ca5b7eb748e12b0825d052469ceb9a0f95187d4e661",
+    "size": 406
+  },
+  {
+    "path": "requirements.txt",
+    "sha256": "251e2d01abf3aae53eade5a5ed86792bec8b99a5f9e9cd1f75151be3b90ec15c",
+    "size": 68
+  },
+  {
+    "path": "templates/督办管理总台账.xlsx",
+    "sha256": "54e726c9d526677864aa9c552a4230fb4ce3e80dcd7028d81ebd5fc365a6c8c1",
+    "size": 12027
+  },
+  {
+    "path": "tests/__init__.py",
+    "sha256": "519c18405d4823a7408533f5ddf65c778f10ed37bdf1c2b8124df5939f073a9d",
+    "size": 71
+  },
+  {
+    "path": "tests/fixture_adapter.py",
+    "sha256": "9a4f02d1f3d55e52fed248c163fd01b5e6c1384f891f1bd0a731c63653aaf894",
+    "size": 2620
+  },
+  {
+    "path": "tests/test_business.py",
+    "sha256": "305f334a13e9dff296a58e94ce887fac19a98e1b01c570fea84b55deab636d1f",
+    "size": 12538
+  },
+  {
+    "path": "tests/test_cli.py",
+    "sha256": "2de4e2b3c96fff58907ffe242098f67d3c3f38251ad4fd72e8c9b7c7b3fb6ad0",
+    "size": 3962
+  },
+  {
+    "path": "tests/test_native.py",
+    "sha256": "01d389cfc8d3a959c0ca492cb1bb42366d79e4fe06c6b6ff2c4db5e236a450e8",
+    "size": 8788
+  },
+  {
+    "path": "tests/test_regressions.py",
+    "sha256": "6fc82ffdbb76ab9ebf3d8ee83c75148cfbc8bff2553f18b0854da5f370507647",
+    "size": 15941
+  },
+  {
+    "path": "tools/build_template.py",
+    "sha256": "a95516002dd87614eae960846d7c20f9e225a71826fab15baf5e2ae19c56ca9e",
+    "size": 517
+  },
+  {
+    "path": "tools/check_environment.py",
+    "sha256": "24400cae9f1670828fda1a7dcb53a715c13e3635b95f5de202c72c2749fd4a2d",
+    "size": 1097
+  },
+  {
+    "path": "tools/run_acceptance.py",
+    "sha256": "1c0b31886a32213e2c6cd9ee110ac8a704efa7af0f2aeea14b741d00970a073f",
+    "size": 14599
+  },
+  {
+    "path": "tools/run_native_acceptance.py",
+    "sha256": "0476905b2b41f16652cea329dfbf82575cd6888400017651009b61262ff0cb1f",
+    "size": 5801
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "version": "1.2.0",
+  "file": "duban-assistant-v1.2.zip",
+  "bytes": 507796,
+  "sha256": "a3c5b208bbdabef101654b8bf9ccd679ab17fa4bd9fd55d05a4dd5139f588d8b",
+  "files": 76,
+  "zip_integrity": "pass",
+  "clean_extract_smoke": [
+    "doctor",
+    "init",
+    "full",
+    "native-context"
+  ],
+  "unit_and_integration_tests": 61,
+  "native_CLI_calls": 58,
+  "custom_adapter_required": false,
+  "real_model_calls_in_tests": 0,
+  "real_mail_calls_in_tests": 0
+}

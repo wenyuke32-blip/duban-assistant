@@ -1,21 +1,26 @@
-# 督办盯梢小助手 V1.1 审计修复版
+# 督办盯梢小助手 V1.2：MobileWork原生协作版
 
-[下载完整V1.1 ZIP](https://github.com/wenyuke32-blip/duban-assistant/raw/refs/heads/main/downloads/duban-assistant-v1.1.zip) · [四类端到端验收报告](docs/端到端验收报告.md) · [部署操作说明](docs/部署操作说明_V1.1.md)
+[下载V1.2完整ZIP](https://github.com/wenyuke32-blip/duban-assistant/raw/refs/heads/main/downloads/duban-assistant-v1.2.zip) · [部署操作](docs/MobileWork原生部署_V1.2.md) · [验收结果](docs/端到端验收报告.md)
 
-当前不能认定项目已完成MobileWork生产上线。已经实际运行的是本地确定性业务内核；真实模型、cmcc-mail绑定模块尚未实现，企业邮箱搜索/附件下载/发送和无人值守授权未验证。不得把提示词、fixture或函数存在当作真实能力通过。
+**AI直接使用MobileWork自身的大模型，邮箱直接用自然语言调用cmcc-mail。** 不需要额外模型API、邮箱HTTP接口或必须编写的Python适配模块。
 
-本版重点修复重复更新/报告入队、空证据和非法字段、旧AI研判失效、附件来源验证与分页恢复，以及报告发布和台账提交窗口的中断恢复。详细证据见验收报告及docs/evidence。
+MobileWork读SKILL.md，自己理解主管反馈、分析拖延原因和撰写复盘；直接委托cmcc-mail查信/发信。程序保存结果、维护固定Excel、计算统计、去重及生成10份带图表和复盘的Excel/Word文件。JSON及后台命令由宿主内部完成，不要求管理员手写。
+
+默认full返回原生协作阶段，由MobileWork持续执行到完成/待确认；中断后恢复原检查点，未知发送先核实原调用。旧--adapter保留兼容，不是默认前提。
 
 ```bash
 python tools/check_environment.py
 python -m duban init --workspace ./workspace-data
-python -m duban doctor --workspace ./workspace-data
-python -m duban add --workspace ./workspace-data --file examples/新增任务.json
-python -m duban reports --workspace ./workspace-data
-python -m unittest discover -s tests -v
-python tools/run_acceptance.py --output ./acceptance-run
+python -m duban full --workspace ./workspace-data
 ```
 
-运行条件：Python3.10+、Linux/POSIX、中文字体、requirements.txt中的依赖。能力探测仅验证当前环境；不能假设MobileWork允许Python或安装依赖。acceptance-run必须为空且与生产目录分离。最后一条用合成任务真实写本地文件，并用明确标记的模拟宿主验证调用链，真实邮件和真实模型调用次数均为0。
+管理员在MobileWork直接说“执行完整督办流程”；具体后台步骤见SKILL.md。首次只需确认固定目录、真实联系人和实际业务资料，认证/发送确认由cmcc-mail按其规则处理。
 
-发布包含SKILL.md、代码、空白台账、提示词/schema、测试、两条端到端流程、测试证据及中文部署说明。生产初始化不导入样例。tests/fixture_adapter.py只能用于验收，不能用于生产。
+```bash
+python -m unittest discover -s tests -v
+python tools/run_native_acceptance.py --output ./native-acceptance-run
+```
+
+本地验收真实写入文件，但AI内容与邮箱语言回复为显式模拟，真实外部模型/邮件调用均0，不能宣称已经在你的MobileWork完成实测。正式运行仍应在目标平台核实脚本权限、持久化、分析效果和实际邮箱结果。
+
+运行条件：Python3.10+、Linux/POSIX、中文字体及requirements.txt依赖；只在平台允许时配置依赖。工作空间固定文件为督办管理总台账.xlsx。源码包不是平台签名安装包。

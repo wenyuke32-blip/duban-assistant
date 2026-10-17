@@ -12,5 +12,5 @@ try:
     from duban.reports import chart_font
     results['chinese_chart_font']=bool(chart_font())
 except Exception: results['chinese_chart_font']=False
-results['not_verified']=['MobileWork重启后持久化','cmcc-mail真实接口/认证/发送授权','真实邮箱收发','宿主AI调用']
+results['not_verified']=['MobileWork重启后持久化','cmcc-mail自然语言委托/认证/发送授权','真实邮箱收发','宿主AI调用']
 print(json.dumps(results,ensure_ascii=False,indent=2))

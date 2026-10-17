@@ -111,7 +111,23 @@ def run(args):
     store=Store(args.workspace); adapter=Adapter(args.adapter) if args.adapter else None
     cmd=ALIASES.get(args.command,args.command)
     if cmd=='recover': return {'命令':'recover','结果':store.recover()}
-    if cmd=='doctor': return {'命令':'doctor','宿主适配器':adapter.capabilities() if adapter else '未配置；真实AI和邮箱未接入','真实平台验收':'未执行'}
+    if cmd=='doctor': return {'命令':'doctor','默认方式':'MobileWork自身大模型分析，直接用自然语言调用cmcc-mail；无需Python模型/邮箱适配模块','原生入口':'native-start/native-context','可选旧适配器':adapter.capabilities() if adapter else '未使用','真实平台验收':'需在MobileWork实际执行后记录，当前探测不作通过判断'}
+    if cmd.startswith('native-') or (not adapter and not args.local and cmd in ['sync','scan','warn','full']):
+        from . import native
+        with store.transaction() as s:
+            if cmd in ['native-start','sync','scan','warn','full']: value=native.start(s,args.intent if cmd=='native-start' else cmd,args.simulation)
+            elif cmd=='native-context': value=native.context(s)
+            elif cmd=='native-mail': value=native.mail(s,read_json(args.file))
+            elif cmd=='native-sync-finish': value=native.sync_finish(s,read_json(args.file))
+            elif cmd=='native-analysis': value=native.analyze(s,read_json(args.file))
+            elif cmd=='native-report-context': value=native.narrative_context(s,args.department or '管理员综合')
+            elif cmd=='native-report-text': value=native.narrative(s,read_json(args.file))
+            elif cmd=='native-build': value=native.build(s)
+            elif cmd=='native-next-send': value=native.next_send(s)
+            elif cmd=='native-send-result': value=native.send_result(s,read_json(args.file))
+            else: raise ValueError('未知原生协作入口')
+        return {'命令':cmd,'结果':value}
+
     with store.transaction() as s:
         baseline={k:len(s.data[k]) for k in ['active','closed','pending','outbox','mail']}
         old_ids={r['ID'] for r in s.data['history']}
@@ -119,7 +135,12 @@ def run(args):
     result={}
     if cmd=='sync': result=sync(store,adapter)
     elif cmd=='dispatch':
-        result=dispatch(store,adapter) if adapter else {'status':'blocked','原因':'缺少宿主邮箱适配器，保留待发送队列'}
+        if adapter: result=dispatch(store,adapter)
+        else:
+            from . import native
+            with store.transaction() as s:
+                if not s.get_config('native_run') or s.get_config('native_run')['stage']=='complete':native.start(s,'send',args.simulation)
+                result=native.next_send(s)
     elif cmd=='reconcile':
         result=reconcile(store,adapter) if adapter else {'status':'blocked','原因':'需要邮箱已发送查询接口'}
     elif cmd=='extract': result=extract(args.file)
@@ -153,7 +174,7 @@ def run(args):
             elif cmd=='contacts': result=core.contacts(s,read_json(args.file))
             elif cmd=='batch': result=batch(s,read_json(args.file))
             elif cmd=='nl':
-                if not adapter: result={'status':'blocked','原因':'需宿主AI按prompts/admin.md输出结构化计划后使用batch，或配置plan_admin适配器'}
+                if not adapter: result={'action':'MobileWork自身理解此请求并生成batch计划','text':args.text,'tasks':core.all_tasks(s),'contacts':s.data['contacts'],'schema':'prompts/admin.md','说明':'无需额外模型API或Python适配器；计划由当前宿主会话生成后执行batch'}
                 else:
                     plan=adapter.plan_admin(args.text,{'tasks':copy.deepcopy(core.all_tasks(s)),'contacts':copy.deepcopy(s.data['contacts'])})
                     result=batch(s,plan)
@@ -174,7 +195,7 @@ def run(args):
             elif cmd=='scan': result=core.scan(s,adapter,True)
             elif cmd=='analysis': result=core.apply_analysis(s,args.task_id,read_json(args.file))
             elif cmd=='reports': result=generate(s)
-            elif cmd=='send-reports': result={'入队':queue_reports(s),'下一步':'dispatch执行通讯录核验与平台发送授权'}
+            elif cmd=='send-reports': result={'入队':queue_reports(s),'下一步':'由MobileWork执行native-start --intent send，再按native-next-send自然语言调用cmcc-mail；无需自建邮箱适配器'}
             elif cmd=='outbox': result=s.data['outbox']
             elif cmd=='import':
                 wb=load_workbook(args.file,data_only=True); ws=wb[args.sheet] if args.sheet else wb.active
@@ -208,9 +229,11 @@ def run(args):
     return {'命令':cmd,'结果':result,'执行摘要':summary}
 
 def main():
-    p=argparse.ArgumentParser(description='督办盯梢小助手V1.1；详见SKILL.md')
+    p=argparse.ArgumentParser(description='督办盯梢小助手V1.2：MobileWork原生AI与自然语言邮箱协作')
     p.add_argument('command'); p.add_argument('--workspace',default='./workspace-data'); p.add_argument('--adapter',help='可信宿主Python模块名，不含凭据')
     p.add_argument('--file'); p.add_argument('--mapping'); p.add_argument('--sheet'); p.add_argument('--task-id'); p.add_argument('--pending-id'); p.add_argument('--department'); p.add_argument('--risk',action='store_true'); p.add_argument('--text'); p.add_argument('--local',action='store_true',help='管理员显式离线运行，不代表真实同步或发送')
+    p.add_argument('--intent',default='full',choices=['full','sync','scan','warn','reports','send'])
+    p.add_argument('--simulation',action='store_true',help='仅验收时标记输入及邮件回执为模拟，绝不计为真实发送')
     args=p.parse_args()
     try:
         workspace=Path(args.workspace).resolve(); workspace.mkdir(parents=True,exist_ok=True)

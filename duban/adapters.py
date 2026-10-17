@@ -1,4 +1,4 @@
-"""部署方提供可信的宿主适配模块。本文件不假造cmcc-mail工具或认证参数。"""
+"""可选旧版兼容接口；V1.2默认使用native.py，不需要提供Python模型/邮箱适配模块。"""
 import copy, hashlib, importlib
 from .store import now
 

@@ -94,7 +94,14 @@ def build_scope(s,scope,folder):
         a=analyses[t['内部任务唯一ID']]
         doc.add_paragraph(f"{t['任务名称']}：协调事项：{('；'.join(a.get('coordination',[]))) or '尚未有效研判'}；整改建议：{('；'.join(a.get('actions',[]))) or '尚未有效研判'}；下阶段重点：{'；'.join(a.get('next_focus',[])) or '核实最新进展与实际阻塞事项'}。")
     if not live: doc.add_paragraph('当前无在办任务。')
-    doc.add_heading('五、协办及统计明细',1)
+    narrative=s.get_config('narrative:'+scope,{})
+    if narrative.get('fingerprint')==business_report_fingerprint(s):
+        doc.add_heading('五、MobileWork智能复盘',1)
+        if narrative.get('execution_mode')!='production': doc.add_paragraph('以下为模拟或未经宿主实际调用核验的复盘内容，不能作为真实模型验收证据。')
+        for section in narrative['sections']:
+            doc.add_heading(section['heading'],2);doc.add_paragraph(section['text'])
+            if section.get('evidence'):doc.add_paragraph('依据：'+'；'.join(e['quote'] for e in section['evidence']))
+    doc.add_heading('六、协办及统计明细',1)
     if scope=='管理员综合':
         table=doc.add_table(rows=1,cols=4); table.style='Light Shading Accent 1'
         for c,v in zip(table.rows[0].cells,['部门','任务总数','已完成','逾期']): c.text=v
@@ -107,12 +114,48 @@ def build_scope(s,scope,folder):
     img.unlink()
     return [xlsx,docx]
 
-def report_fingerprint(s):
+def business_report_fingerprint(s):
     volatile={'更新时间','最近更新时间','最新AI研判时间','最近邮件通知时间','最近通知等级','最近反馈来源'}
     tasks=[{k:t[k] for k in FIELDS if k not in volatile} for t in sorted(all_tasks(s),key=lambda t:t['内部任务唯一ID'])]
     analyses={t['内部任务唯一ID']:current_analysis(s,t) for t in all_tasks(s)}
-    payload={'date':datetime.now(TZ).date().isoformat(),'version':'1.1.0','tasks':tasks,'analyses':analyses,'analysis_modes':{t['内部任务唯一ID']:s.get_config('analysis_meta:'+t['内部任务唯一ID'],{}).get('execution_mode') for t in all_tasks(s)}}
+    payload={'date':datetime.now(TZ).date().isoformat(),'version':'1.2.0','tasks':tasks,'analyses':analyses,'analysis_modes':{t['内部任务唯一ID']:s.get_config('analysis_meta:'+t['内部任务唯一ID'],{}).get('execution_mode') for t in all_tasks(s)}}
     return hashlib.sha256(json.dumps(payload,ensure_ascii=False,sort_keys=True).encode()).hexdigest()
+
+def report_context(s,scope):
+    if scope not in DEPTS+['管理员综合']: raise ValueError('报告范围无效')
+    tasks=all_tasks(s)
+    own=tasks if scope=='管理员综合' else [t for t in tasks if t['主责部门']==scope]
+    assist=[] if scope=='管理员综合' else [t for t in tasks if scope in t.get('协办部门','').split('、') and t['主责部门']!=scope]
+    return {'scope':scope,'expected_fingerprint':business_report_fingerprint(s),'statistics':stats(own),
+            'tasks':own,'assisting_tasks':assist,'analyses':{t['内部任务唯一ID']:current_analysis(s,t) for t in own},
+            '要求':'由MobileWork自身大模型基于这些真实统计与原文撰写带引用的进展、风险、协调、整改、下阶段复盘。数字只取statistics，不自由估算。'}
+
+def save_narrative(s,scope,sections,expected_fingerprint,execution_mode='unverified'):
+    context=report_context(s,scope)
+    if expected_fingerprint!=context['expected_fingerprint']: raise ValueError('报告上下文已变化，需要重新生成AI复盘')
+    if not isinstance(sections,list) or not sections: raise ValueError('报告复盘至少包含一个段落')
+    allowed={t['内部任务唯一ID']:t for t in context['tasks']+context['assisting_tasks']}
+    other_names=[t['任务名称'] for t in all_tasks(s) if t['内部任务唯一ID'] not in allowed]
+    headings=['总体情况','主要进展','风险分析','协调事项','整改建议','下阶段重点']
+    for section in sections:
+        if not isinstance(section,dict) or section.get('heading') not in headings or not isinstance(section.get('text'),str) or not section['text'].strip() or len(section['text'])>4000: raise ValueError('复盘段落结构无效')
+        ids=section.get('task_ids',[]);evidence=section.get('evidence',[])
+        if not isinstance(ids,list) or any(tid not in allowed for tid in ids): raise ValueError('复盘引用超出报告范围')
+        if allowed and (not ids or not evidence): raise ValueError('有任务时复盘须给出任务ID及原文证据')
+        if not isinstance(evidence,list): raise ValueError('证据结构无效')
+        for e in evidence:
+            task=allowed.get(e.get('task_id'))
+            if not task or task['内部任务唯一ID'] not in ids or not isinstance(e.get('quote'),str) or not e['quote'].strip(): raise ValueError('复盘原文引用无效')
+            values=[str(v) for k,v in task.items() if k not in ['可能拖延原因','AI分析依据','AI整改建议','需要协调事项'] or current_analysis(s,task)]
+            if not any(e['quote'] in value for value in values): raise ValueError('复盘证据不能在当前任务中核对')
+        if any(name in section['text'] for name in other_names): raise ValueError('部门复盘包含其他部门专属任务')
+    record={'fingerprint':expected_fingerprint,'sections':sections,'execution_mode':execution_mode,'generated_at':now()}
+    s.set_config('narrative:'+scope,record)
+
+def report_fingerprint(s):
+    base=business_report_fingerprint(s)
+    narratives={scope:s.get_config('narrative:'+scope,{}).get('sections') for scope in DEPTS+['管理员综合'] if s.get_config('narrative:'+scope,{}).get('fingerprint')==base}
+    return hashlib.sha256(json.dumps({'base':base,'narratives':narratives,'narrative_modes':{scope:s.get_config('narrative:'+scope,{}).get('execution_mode') for scope in narratives}},ensure_ascii=False,sort_keys=True).encode()).hexdigest()
 
 def _sync_dir(root):
     fd=os.open(root,os.O_DIRECTORY)
