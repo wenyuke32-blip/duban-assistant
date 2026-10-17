@@ -1,0 +1,20 @@
+{
+  "python": "3.12.14",
+  "platform": "Linux",
+  "python_supported": true,
+  "modules": {
+    "openpyxl": true,
+    "docx": true,
+    "matplotlib": true,
+    "pypdf": true,
+    "fcntl": true
+  },
+  "atomic_replace_symlink": true,
+  "chinese_chart_font": true,
+  "not_verified": [
+    "MobileWork重启后持久化",
+    "cmcc-mail真实接口/认证/发送授权",
+    "真实邮箱收发",
+    "宿主AI调用"
+  ]
+}

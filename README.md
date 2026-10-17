@@ -1,5 +1,9 @@
 # 督办盯梢小助手 V1.0
 
+[点击下载完整项目 ZIP（含 Excel 模板）](https://github.com/wenyuke32-blip/duban-assistant/raw/refs/heads/main/downloads/督办盯梢小助手_V1.0.zip)
+
+也可点击仓库页面的 **Code → Download ZIP** 下载全部源码。
+
 根据《督办盯梢小助手_Codex开发提示词_V1.0》制作的MobileWork Skill源码项目。包含可执行Python业务内核、固定Excel台账模板、图表报告、宿主AI/邮箱适配合同、测试与中文指南。
 
 **可本地运行：** 台账初始化/增量管理、Excel导入、归档/重开、去重与异常保护、预警入队、四部门和管理员共10份带图表Excel/Word报告。
